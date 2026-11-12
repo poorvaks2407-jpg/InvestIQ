@@ -15,7 +15,6 @@ API_KEY = os.getenv("FINNHUB_API_KEY")
 FINNHUB_BASE_URL = "https://finnhub.io/api/v1"
 
 
-# Home route
 @app.route("/")
 def home():
     return jsonify({
@@ -23,7 +22,6 @@ def home():
     })
 
 
-# Get stock quote from Finnhub
 def get_stock_quote(symbol):
     response = requests.get(
         f"{FINNHUB_BASE_URL}/quote",
@@ -51,20 +49,16 @@ def get_stock_quote(symbol):
     }
 
 
-# Dashboard stocks
 @app.route("/api/stocks")
 def get_stocks():
     if not API_KEY:
-        return jsonify({
-            "error": "Finnhub API key is missing"
-        }), 500
+        return jsonify({"error": "Finnhub API key is missing"}), 500
 
     stocks = []
 
     try:
         for symbol in ["AAPL", "NVDA", "TSLA"]:
             stock = get_stock_quote(symbol)
-
             if stock:
                 stocks.append(stock)
 
@@ -72,57 +66,36 @@ def get_stocks():
 
     except requests.exceptions.RequestException as error:
         print("Dashboard API Error:", error)
-
-        return jsonify({
-            "error": "Could not fetch stock data"
-        }), 502
+        return jsonify({"error": "Could not fetch stock data"}), 502
 
 
-# Individual stock quote
 @app.route("/api/quote")
 def get_quote():
     if not API_KEY:
-        return jsonify({
-            "error": "Finnhub API key is missing"
-        }), 500
+        return jsonify({"error": "Finnhub API key is missing"}), 500
 
     symbol = request.args.get("symbol", "AAPL").strip().upper()
 
     if not symbol:
-        return jsonify({
-            "error": "Please provide a stock symbol"
-        }), 400
+        return jsonify({"error": "Please provide a stock symbol"}), 400
 
     try:
         stock = get_stock_quote(symbol)
 
         if not stock:
-            return jsonify({
-                "error": "No quote data found"
-            }), 404
+            return jsonify({"error": "No quote data found"}), 404
 
         return jsonify(stock)
 
     except requests.exceptions.RequestException as error:
         print("Quote API Error:", error)
-
-        return jsonify({
-            "error": "Could not fetch stock quote"
-        }), 502
+        return jsonify({"error": "Could not fetch stock quote"}), 502
 
 
-# Historical stock data using Yahoo Finance
 @app.route("/api/history")
 def get_history():
-
-    symbol = request.args.get("symbol", "AAPL")
-    period = request.args.get("range", "1M")
-
-    symbol = symbol.strip().upper()
-    period = period.strip().upper()
-
-    print("Requested symbol:", symbol)
-    print("Requested range:", repr(period))
+    symbol = request.args.get("symbol", "AAPL").strip().upper()
+    period = request.args.get("range", "1M").strip().upper()
 
     ranges = {
         "1W": ("7d", "1d"),
@@ -132,15 +105,11 @@ def get_history():
     }
 
     if not symbol:
-        return jsonify({
-            "error": "Please provide a stock symbol"
-        }), 400
+        return jsonify({"error": "Please provide a stock symbol"}), 400
 
     if period not in ranges:
         return jsonify({
-            "error": "Invalid range. Use 1W, 1M, 6M, or 1Y.",
-            "received_range": period,
-            "available_ranges": list(ranges.keys())
+            "error": "Invalid range. Use 1W, 1M, 6M, or 1Y."
         }), 400
 
     yahoo_period, interval = ranges[period]
@@ -156,7 +125,7 @@ def get_history():
 
         if data.empty:
             return jsonify({
-                "error": "No historical data found for this symbol",
+                "error": "No historical data found",
                 "symbol": symbol
             }), 404
 
@@ -176,12 +145,11 @@ def get_history():
 
     except Exception as error:
         print("Yahoo Finance Error:", error)
-
         return jsonify({
-            "error": "Could not fetch historical stock data",
-            "details": str(error)
+            "error": "Could not fetch historical stock data"
         }), 502
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
