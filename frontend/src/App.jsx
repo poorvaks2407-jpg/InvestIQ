@@ -11,6 +11,8 @@ import {
 } from 'recharts'
 import './App.css'
 
+const API_BASE_URL = 'https://investiq-backend-8vzf.onrender.com'
+
 // ==========================================
 // RISK ASSESSMENT COMPONENT
 // ==========================================
@@ -37,7 +39,7 @@ function RiskAssessment() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/api/history?symbol=${encodeURIComponent(stockSymbol)}&range=6M`
+        `${API_BASE_URL}/api/history?symbol=${encodeURIComponent(stockSymbol)}&range=6M`
       )
 
       const data = await response.json()
@@ -50,7 +52,6 @@ function RiskAssessment() {
         throw new Error('Not enough historical data to calculate risk')
       }
 
-      // Calculate daily percentage returns
       const returns = []
 
       for (let i = 1; i < data.history.length; i++) {
@@ -72,35 +73,27 @@ function RiskAssessment() {
         throw new Error('Not enough valid price changes to calculate risk')
       }
 
-      // Calculate average daily return
       const average =
         returns.reduce((total, value) => total + value, 0) /
         returns.length
 
-      // Calculate sample variance
       const variance =
         returns.reduce(
           (total, value) => total + Math.pow(value - average, 2),
           0
         ) / (returns.length - 1)
 
-      // Standard deviation of daily returns
       const dailyVolatility = Math.sqrt(variance)
-
-      // Annualized volatility: daily volatility × square root of 252 trading days
       const annualizedVolatility = dailyVolatility * Math.sqrt(252)
 
-      // Average absolute daily movement
       const averageMovement =
         returns.reduce((total, value) => total + Math.abs(value), 0) /
         returns.length
 
-      // Largest absolute daily movement
       const largestMovement = Math.max(
         ...returns.map((value) => Math.abs(value))
       )
 
-      // Simple risk classification
       let riskLevel = 'Low'
       let riskDescription =
         'The stock has shown relatively lower historical price fluctuations.'
@@ -262,24 +255,20 @@ function RiskAssessment() {
 function App() {
   const [activeTab, setActiveTab] = useState('Dashboard')
 
-  // Dashboard states
   const [stocks, setStocks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  // Stock Analysis states
   const [searchSymbol, setSearchSymbol] = useState('')
   const [selectedStock, setSelectedStock] = useState(null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState('')
 
-  // Historical chart states
   const [history, setHistory] = useState([])
   const [historyRange, setHistoryRange] = useState('1M')
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyError, setHistoryError] = useState('')
 
-  // Watchlist states
   const [watchlist, setWatchlist] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('investiq-watchlist')) || []
@@ -308,7 +297,7 @@ function App() {
         watchlist.map(async (stock) => {
           try {
             const response = await fetch(
-              `http://127.0.0.1:5000/api/quote?symbol=${encodeURIComponent(stock.symbol)}`
+              `${API_BASE_URL}/api/quote?symbol=${encodeURIComponent(stock.symbol)}`
             )
 
             if (!response.ok) return stock
@@ -334,7 +323,7 @@ function App() {
 
   // Fetch popular stocks for Dashboard
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/api/stocks')
+    fetch(`${API_BASE_URL}/api/stocks`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Failed to fetch stock data')
@@ -368,7 +357,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/api/quote?symbol=${encodeURIComponent(searchSymbol.trim())}`
+        `${API_BASE_URL}/api/quote?symbol=${encodeURIComponent(searchSymbol.trim())}`
       )
 
       const data = await response.json()
@@ -406,7 +395,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/api/quote?symbol=${encodeURIComponent(symbol)}`
+        `${API_BASE_URL}/api/quote?symbol=${encodeURIComponent(symbol)}`
       )
 
       const data = await response.json()
@@ -447,7 +436,7 @@ function App() {
 
       try {
         const response = await fetch(
-          `http://127.0.0.1:5000/api/history?symbol=${encodeURIComponent(selectedStock.symbol)}&range=${historyRange}`
+          `${API_BASE_URL}/api/history?symbol=${encodeURIComponent(selectedStock.symbol)}&range=${historyRange}`
         )
 
         const data = await response.json()
@@ -559,18 +548,21 @@ function App() {
                 <p>Total Portfolio Value</p>
                 <h2>$24,580.50</h2>
                 <span className="positive">↗ 8.24% this month</span>
+                <small className="muted">Sample portfolio data</small>
               </div>
 
               <div className="stat-card">
                 <p>Total Investment</p>
                 <h2>$20,000.00</h2>
                 <span className="muted">Initial investment</span>
+                <small className="muted">Sample portfolio data</small>
               </div>
 
               <div className="stat-card">
                 <p>Total Returns</p>
                 <h2 className="green">$4,580.50</h2>
                 <span className="positive">↗ 22.90% overall</span>
+                <small className="muted">Sample portfolio data</small>
               </div>
             </section>
 
@@ -579,7 +571,7 @@ function App() {
                 <div className="panel-heading">
                   <div>
                     <h3>Portfolio Performance</h3>
-                    <p>Track your investment growth</p>
+                    <p>Sample portfolio growth illustration</p>
                   </div>
 
                   <select defaultValue="7D">
@@ -640,13 +632,13 @@ function App() {
                 <div className="panel-heading">
                   <div>
                     <h3>AI Market Insight</h3>
-                    <p>Intelligent market overview</p>
+                    <p>Illustrative market overview</p>
                   </div>
                   <span className="ai-icon">✧</span>
                 </div>
 
                 <div className="insight">
-                  <span className="insight-tag">MARKET SUMMARY</span>
+                  <span className="insight-tag">SAMPLE MARKET SUMMARY</span>
                   <h3>Market sentiment is positive</h3>
                   <p>
                     Technology stocks are showing positive momentum.
@@ -668,7 +660,7 @@ function App() {
               <div className="panel-heading">
                 <div>
                   <h3>Popular Stocks</h3>
-                  <p>Market snapshot</p>
+                  <p>Latest available market quotes</p>
                 </div>
 
                 <button
@@ -708,7 +700,6 @@ function App() {
 
         ) : activeTab === 'Stock Analysis' ? (
 
-          /* STOCK ANALYSIS */
           <section className="panel">
             <div className="panel-heading">
               <div>
@@ -777,7 +768,6 @@ function App() {
                   </div>
                 </div>
 
-                {/* HISTORICAL STOCK CHART */}
                 <div className="history-section">
                   <div className="panel-heading">
                     <div>
@@ -894,7 +884,6 @@ function App() {
 
         ) : activeTab === 'Watchlist' ? (
 
-          /* WATCHLIST */
           <section className="panel watchlist-panel">
             <div className="panel-heading">
               <div>
@@ -992,12 +981,10 @@ function App() {
 
         ) : activeTab === 'Risk Assessment' ? (
 
-          /* RISK ASSESSMENT */
           <RiskAssessment />
 
         ) : (
 
-          /* AI INSIGHTS */
           <section className="panel coming-soon">
             <div className="ai-icon">✧</div>
             <h2>{activeTab}</h2>
